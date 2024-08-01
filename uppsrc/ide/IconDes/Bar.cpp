@@ -1,10 +1,8 @@
 #include "IconDes.h"
 
-namespace Upp {
-
 #define KEYNAMESPACE IconDesKeys
 #define KEYGROUPNAME "Icon designer"
-#define KEYFILE      <IconDes/IconDes.key>
+#define KEYFILE      <ide/IconDes/IconDes.key>
 #include             <CtrlLib/key_source.h>
 
 void IconDes::SetPen(int _pen)
@@ -81,8 +79,6 @@ void IconDes::DoCut()
 		Delete();
 }
 
-void IconDes::ToolEx(Bar& bar) {}
-
 void IconDes::EditBar(Bar& bar)
 {
 	using namespace IconDesKeys;
@@ -139,8 +135,10 @@ void IconDes::ImageBar(Bar& bar)
 	bar.Add(c, AK_INTERPOLATE, IconDesImg::Interpolate(), THISBACK(Interpolate));
 	bar.Add(c, AK_HMIRROR, IconDesImg::MirrorX(), THISBACK(MirrorX));
 	bar.Add(c, AK_VMIRROR, IconDesImg::MirrorY(), THISBACK(MirrorY));
+	bar.Add(c, AK_DMIRROR, IconDesImg::MirrorD(), [=] { MirrorD(false); });
 	bar.Add(c, AK_HSYM, IconDesImg::SymmX(), THISBACK(SymmX));
 	bar.Add(c, AK_VSYM, IconDesImg::SymmY(), THISBACK(SymmY));
+	bar.Add(c, AK_DSYM, IconDesImg::SymmD(), [=] { MirrorD(true); });
 	bar.Add(c, AK_ROTATE, IconDesImg::Rotate(), THISBACK(Rotate));
 	bar.Add(c, AK_FREE_ROTATE, IconDesImg::FreeRotate(), THISBACK(FreeRotate));
 	bar.Add(c, AK_RESCALE, IconDesImg::Rescale(), THISBACK(SmoothRescale));
@@ -204,12 +202,12 @@ void IconDes::DrawBar(Bar& bar)
 	bar.Add(c && c->image.GetLength() < 256 * 256, "Smart Upscale 2x",
 	        IconDesImg::Upscale(), THISBACK(Upscale))
 	   .Key(AK_RESIZEUP2);
-	bar.Add(c && c->image.GetLength() < 256 * 256, "Resize Up 2x",
+	bar.Add(c && c->image.GetLength() < 4096 * 4096, "Resize Up 2x",
 	        IconDesImg::ResizeUp2(), THISBACK(ResizeUp2))
 	   .Key(AK_RESIZEUP2);
 	bar.Add(c, "Supersample 2x", IconDesImg::ResizeDown2(), THISBACK(ResizeDown2))
 	   .Key(AK_RESIZEDOWN2);
-	bar.Add(c && c->image.GetLength() < 256 * 256, "Resize Up 3x",
+	bar.Add(c && c->image.GetLength() < 4096 * 4096, "Resize Up 3x",
 	        IconDesImg::ResizeUp(), THISBACK(ResizeUp))
        .Key(AK_RESIZEUP3);
 	bar.Add(c, "Supersample 3x", IconDesImg::ResizeDown(), THISBACK(ResizeDown))
@@ -418,6 +416,4 @@ IconDes::IconDes()
 
 	status.Width(200);
 	status.NoTransparent();
-}
-
 }

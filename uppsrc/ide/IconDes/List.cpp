@@ -1,7 +1,5 @@
 #include "IconDes.h"
 
-namespace Upp {
-
 String IconDes::FormatImageName(const Slot& c)
 {
 	Size sz = c.image.GetSize();
@@ -440,6 +438,12 @@ void IconDes::EditImage()
 	dword flags = c.flags;
 	bool exp = c.exp;
 	String name = c.name;
+
+	Vector<ImageIml> bimg;
+	ImageIml mm;
+	mm.image = c.image;
+	bimg << mm;
+	dlg.estimated_size = FormatFileSize(PackImlData(bimg).GetCount());
 	
 	dlg.cx <<= img.GetWidth();
 	dlg.cy <<= img.GetHeight();
@@ -542,9 +546,6 @@ void IconDes::ListMenu(Bar& bar)
 	ListMenuEx(bar);
 }
 
-void IconDes::ListMenuEx(Bar& bar) {}
-
-
 void IconDes::Clear()
 {
 	ilist.Clear();
@@ -637,6 +638,4 @@ void IconDes::DnDInsert(int line, PasteClip& d)
 void IconDes::Drag()
 {
 	ilist.DoDragAndDrop(InternalClip(ilist, "icondes-icon"), ilist.GetDragSample(), DND_MOVE);
-}
-
 }
