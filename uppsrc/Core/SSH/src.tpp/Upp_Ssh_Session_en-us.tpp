@@ -62,7 +62,7 @@ is true, [%-*@3 prikey] and [%-*@3 pubkey] strings will be treated
 as file paths to the respective key files. This is the default 
 behaviour. Otherwise they will be treated as memory buffers containing 
 the actual keys. Note that it is possible to compute public key 
-from public key (aka. private key auth). To enable it, simply 
+from private key (aka. private key auth). To enable it, simply 
 pass an empty or Null [%-*@3 pubkey] &]
 [s3;%% &]
 [s4; &]
