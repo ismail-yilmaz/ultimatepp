@@ -164,33 +164,6 @@ The `"[C none]`" method allows logging in without an authentication
 scheme. It is rarely used by the servers, and handled automatically 
 by the session.&]
 [s3;^Upp`:`:SFtp^ &]
-[s4;^Upp`:`:SFtp^ &]
-[s5;:Upp`:`:SshSession`:`:CreateSFtp`(`): [_^Upp`:`:SFtp^ SFtp]_[* CreateSFtp]()&]
-[s2;%% Creates an sftp channel instance.&]
-[s3; &]
-[s4; &]
-[s5;:Upp`:`:SshSession`:`:CreateChannel`(`): [_^Upp`:`:SshChannel^ SshChannel]_[* CreateC
-hannel]()&]
-[s2;%% Creates a generic channel instance.&]
-[s3; &]
-[s4; &]
-[s5;:Upp`:`:SshSession`:`:CreateExec`(`): [_^Upp`:`:SshExec^ SshExec]_[* CreateExec]()&]
-[s2;%% Creates an exec channel instance.&]
-[s3; &]
-[s4; &]
-[s5;:Upp`:`:SshSession`:`:CreateScp`(`): [_^Upp`:`:Scp^ Scp]_[* CreateScp]()&]
-[s2;%% Creates an scp channel instance.&]
-[s3; &]
-[s4; &]
-[s5;:Upp`:`:SshSession`:`:CreateTunnel`(`): [_^Upp`:`:SshTunnel^ SshTunnel]_[* CreateTunn
-el]()&]
-[s2;%% Creates a tcp`-ip and port forwarding channel instance.&]
-[s3; &]
-[s4; &]
-[s5;:Upp`:`:SshSession`:`:CreateShell`(`): [_^Upp`:`:SshShell^ SshShell]_[* CreateShell](
-)&]
-[s2;%% Creates a remote shell channel instance.&]
-[s3; &]
 [s4; &]
 [s5;:Upp`:`:SshSession`:`:Connect`(const Upp`:`:String`&`): [@(0.0.255) bool]_[* Connect](
 [@(0.0.255) const]_[_^Upp`:`:String^ String][@(0.0.255) `&]_[*@3 url])&]
