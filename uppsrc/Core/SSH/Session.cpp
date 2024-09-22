@@ -247,36 +247,43 @@ bool SshSession::Connect(const String& host, int port, const String& user, const
 								? &sChangePasswordCallback
 									: nullptr);
 					break;
-				case PUBLICKEY:
+				case PUBLICKEY: {
+					// Allow  computation of public key from private key.
+					const char *pubkey = !IsNull(session->pubkey) ? ~session->pubkey : nullptr;
 					rc = session->keyfile
 					?	libssh2_userauth_publickey_fromfile(
-							ssh->session,
+							 ssh->session,
 							~user,
-							~session->pubkey,
+							 pubkey,
 							~session->prikey,
 							~session->phrase)
 					:	libssh2_userauth_publickey_frommemory(
-							ssh->session,
+							 ssh->session,
 							~user,
 							 user.GetLength(),
-							~session->pubkey,
-							 session->pubkey.GetLength(),
+							 pubkey,
+							~session->pubkey.GetLength(),
 							~session->prikey,
 							 session->prikey.GetLength(),
 							~session->phrase);
 					break;
-				case HOSTBASED:
+				}
+				case HOSTBASED: {
 					if(!session->keyfile)
 						ThrowError(-1, "Keys cannot be loaded from memory.");
-					else
+					else {
+					// Allow  computation of public key from private key.
+					const char *pubkey = !IsNull(session->pubkey) ? ~session->pubkey : nullptr;
 					rc = libssh2_userauth_hostbased_fromfile(
-							ssh->session,
+							 ssh->session,
 							~user,
-							~session->pubkey,
+							 pubkey,
 							~session->prikey,
 							~session->phrase,
 							~host);
+					}
 					break;
+				}
 				case KEYBOARD:
 					rc = libssh2_userauth_keyboard_interactive(
 						ssh->session,

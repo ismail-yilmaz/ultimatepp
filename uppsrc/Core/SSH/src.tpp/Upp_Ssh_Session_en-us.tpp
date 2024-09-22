@@ -54,14 +54,17 @@ shSession][@(0.0.255) `&]_[* Keys]([@(0.0.255) const]_[_^Upp`:`:String^ String][
 ]_[*@3 prikey], [@(0.0.255) const]_[_^Upp`:`:String^ String][@(0.0.255) `&]_[*@3 pubkey], 
 [@(0.0.255) const]_[_^Upp`:`:String^ String][@(0.0.255) `&]_[*@3 phrase], 
 [@(0.0.255) bool]_[*@3 fromfile]_`=_[@(0.0.255) true])&]
-[s2;%% Sets the asymmetric encryption keys to be used to authenticate 
+[s0;l288;%% Sets the asymmetric encryption keys to be used to authenticate 
 the session. [%-*@3 phrase] can be used to decipher the private 
 key, or it can be empty (not recommended). Returns `*this for 
 method chaining. Note that when the [%-*@3 fromfile] parameter 
 is true, [%-*@3 prikey] and [%-*@3 pubkey] strings will be treated 
 as file paths to the respective key files. This is the default 
 behaviour. Otherwise they will be treated as memory buffers containing 
-the actual keys.&]
+the actual keys. Note that it is possible to compute public key 
+from public key (aka. private key auth). To enable it, simply 
+&]
+[s2;%% pass an empty or Null [%-*@3 pubkey].&]
 [s3;%% &]
 [s4; &]
 [s5;:Upp`:`:SshSession`:`:Method`(int`,Upp`:`:Value`): [_^Upp`:`:SshSession^ SshSession
