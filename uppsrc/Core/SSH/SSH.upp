@@ -44,7 +44,7 @@ file
 	"Library Files" readonly separator,
 	libssh2/libssh2_config.h,
 	libssh2upp.ext,
-	libssh2/Copying,
+	libssh2/COPYING,
 	Docs readonly separator,
 	src.tpp,
 	Info readonly separator,
