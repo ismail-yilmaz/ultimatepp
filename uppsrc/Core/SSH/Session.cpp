@@ -302,7 +302,7 @@ bool SshSession::Connect(const String& host, int port, const String& user, const
 
 Finalize:
 #ifdef PLATFORM_POSIX
-	libssh2_session_callback_set(ssh->session, LIBSSH2_CALLBACK_X11, (void*) sX11RequestCallback);
+	libssh2_session_callback_set2(ssh->session, LIBSSH2_CALLBACK_X11, (libssh2_cb_generic*) sX11RequestCallback);
 	LLOG("X11 dispatcher is set.");
 #endif
 	return true;
