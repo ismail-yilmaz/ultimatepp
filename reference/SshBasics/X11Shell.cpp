@@ -15,5 +15,5 @@ void X11Forwarding(SshSession& session)
 
 	};
 	if(!x11shell.ForwardX11().Console("ansi"))
-		LOG(x11shell.GetErrorDesc());
+		RLOG(x11shell.GetErrorDesc());
 }

@@ -17,15 +17,15 @@ void ReadDirEntries(FileSystemInfo& fsi, const String& path)
 
 void SFtpTransparency(SshSession& session)
 {
-	LOG("Local file system objects----------------------------------------------------------");
+	RLOG("Local file system objects----------------------------------------------------------");
 	ReadDirEntries(StdFileSystemInfo(), GetCurrentDirectory());
 
 	SFtp sftp(session);
 	SFtpFileSystemInfo sfsi(sftp);
 	
-	LOG("Remote file system objects---------------------------------------------------------");
+	RLOG("Remote file system objects---------------------------------------------------------");
 	ReadDirEntries((FileSystemInfo&) sfsi, "/pub/example/*.png");
 	
 	if(sftp.IsError())
-		LOG(sftp.GetErrorDesc());
+		RLOG(sftp.GetErrorDesc());
 }

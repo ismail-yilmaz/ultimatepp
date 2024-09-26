@@ -12,12 +12,12 @@ void ExecListDir(SshSession& session)
 	int exit_code = exec(cmdline, cout, cerr);
 	if(!exec.IsError()) {
 		DUMP(exit_code);
-		LOG("Stdout:\n" << cout);
-		LOG("Stderr:\n" << cerr);
+		RLOG("Stdout:\n" << cout);
+		RLOG("Stderr:\n" << cerr);
 		return;
 	}
-	LOG(exec.GetErrorDesc());
+	RLOG(exec.GetErrorDesc());
 	
 	// Or you can use one of the helper functions instead:
-	// LOG("Stdout:\n" << SshExecute(session, cmdline));
+	// RLOG("Stdout:\n" << SshExecute(session, cmdline));
 }

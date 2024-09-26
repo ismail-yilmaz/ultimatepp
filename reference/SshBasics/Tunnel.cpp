@@ -11,7 +11,7 @@ bool ServerSendRecv(SshSession& session, String& data)
 	// SshTunnel <-> SocketServer
 	SshTunnel tunnel(session);
 	if(!tunnel.Connect("127.0.0.1", 3214)) {
-		LOG("ServerSendRecv(): " << tunnel.GetErrorDesc());
+		RLOG("ServerSendRecv(): " << tunnel.GetErrorDesc());
 		return false;
 	}
 	tunnel.Put(data + '\n');
@@ -23,21 +23,21 @@ void ForwardTcpIp(SshSession& session)
 {
 	SshTunnel listener(session);
 	if(!listener.Listen(3215, 5)) {
-		LOG("ForwardTcpIp(): " << listener.GetErrorDesc());
+		RLOG("ForwardTcpIp(): " << listener.GetErrorDesc());
 		return;
 	}
-	LOG("SSH tunnel (server mode): Waiting for the requests to be tunneled...");
+	RLOG("SSH tunnel (server mode): Waiting for the requests to be tunneled...");
 	for(;;) {
 		SshTunnel tunnel(session);
 		if(!tunnel.Accept(listener)) {
-			LOG("ForwardTcpIp(): " << tunnel.GetErrorDesc());
+			RLOG("ForwardTcpIp(): " << tunnel.GetErrorDesc());
 			return;
 		}
 		// SocketClient <-> SshTunnel
 		String data = tunnel.GetLine();
-		LOG("Tunneled Request: " << data);
+		RLOG("Tunneled Request: " << data);
 		if(!data.IsEmpty() && ServerSendRecv(session, data)) {
-			LOG("Tunneled Response: " << data);
+			RLOG("Tunneled Response: " << data);
 			tunnel.Put(data + '\n');
 		}
 	}

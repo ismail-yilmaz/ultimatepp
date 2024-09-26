@@ -9,5 +9,5 @@ void ScpGet(SshSession& session)
 	
 	Scp scp(session);
 	String file = scp.LoadFile(path);
-	LOG((!scp.IsError() ? file : scp.GetErrorDesc()));
+	RLOG((!scp.IsError() ? file : scp.GetErrorDesc()));
 }

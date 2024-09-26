@@ -8,5 +8,5 @@ void ShellConsole(SshSession& session)
 	SshShell shell(session);
 	shell.Timeout(Null);
 	if(!shell.Console("ansi"))
-		LOG(shell.GetErrorDesc());
+		RLOG(shell.GetErrorDesc());
 }

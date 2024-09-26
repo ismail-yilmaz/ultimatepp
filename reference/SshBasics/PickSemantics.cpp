@@ -7,6 +7,6 @@ void SshPick(SshSession& session)
 {
 	SshSession psession = pick(session);	// All Ssh-based objects are pickable.
 	if(!session)
-		LOG("SshSession object is picked.");
+		RLOG("SshSession object is picked.");
 	SFtpGet(psession);
 }

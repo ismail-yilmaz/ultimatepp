@@ -10,10 +10,10 @@ AsyncWork<void> AsyncListDir(SshSession& session, const String& path)
 		int exit_code = exec("ls -l " + path, cout, cerr);
 		if(exec.IsError())
 			throw Ssh::Error(Format("Worker #%d: %s", exec.GetId(), exec.GetErrorDesc()));
-		LOG("Directory: " << path);
-		LOG("Exit code: " << exit_code);
-		LOG("Stdout:\n" << cout);
-		LOG("Stderr:\n" << cerr);
+		RLOG("Directory: " << path);
+		RLOG("Exit code: " << exit_code);
+		RLOG("Stdout:\n" << cout);
+		RLOG("Stderr:\n" << cerr);
 	});
 	return pick(worker);
 }
@@ -24,7 +24,7 @@ void GetResult(AsyncWork<void>& w)
 		w.Get();
 	}
 	catch(const Ssh::Error& e) {
-		LOG(e);
+		RLOG(e);
 	}
 }
 

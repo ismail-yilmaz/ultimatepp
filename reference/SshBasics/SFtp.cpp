@@ -9,5 +9,5 @@ void SFtpGet(SshSession& session)
 	
 	SFtp sftp(session);
 	String file = sftp.LoadFile(path);
-	LOG((!sftp.IsError() ? file : sftp.GetErrorDesc()));
+	RLOG((!sftp.IsError() ? file : sftp.GetErrorDesc()));
 }
