@@ -209,6 +209,7 @@ void Ctrl::StateH(int reason)
 		if((*statehook()[i])(this, reason))
 			return;
 	StateDeep(reason);
+	FullRefreshCleanup();
 }
 
 bool   Ctrl::Accept()
@@ -440,7 +441,7 @@ String Ctrl::GetDesc() const
 
 String Name(const Ctrl *ctrl)
 {
-	return ctrl ? ctrl->Name() : "NULL";
+	return ctrl ? ctrl->Name() : String("NULL");
 }
 
 String Desc(const Ctrl *ctrl)
@@ -510,6 +511,12 @@ void   Dump(const Ctrl *ctrl)
 		LOG("NULL");
 }
 
+void Ctrl::SetTitle(const char *s)
+{
+	TopWindow *w = GetTopWindow();
+	if(w) w->Title(s);
+}
+
 #endif
 
 bool Ctrl::IsOcxChild()
@@ -547,6 +554,7 @@ Ctrl::Ctrl() {
 	layout_id_literal = false;
 	top = false;
 	uparent = nullptr;
+	megarect = false;
 }
 
 void KillTimeCallbacks(void *id, void *idlim);

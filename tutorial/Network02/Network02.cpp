@@ -2,14 +2,14 @@
 
 using namespace Upp;
 
-constexpr int port = 4000;
+constexpr int port = 8080;
 
 void ProcessHttpRequest(TcpSocket& client)
 {
 	HttpHeader header;
 	if(!header.Read(client)) {
 		Cerr() << "Failed to read HttpHeader.\n";
-		HttpResponse(client, false, 400, "Invalid request");
+		HttpResponse(client, false, HttpStatus::BAD_REQUEST);
 		return;
 	}
 
@@ -21,12 +21,15 @@ void ProcessHttpRequest(TcpSocket& client)
 			   << "Indonesia"
 			   << "Brazil"
 			   << "France";
-
-			HttpResponse(client, false, 200, "OK", "application/json", ja.ToString());
+			
+			auto code = HttpStatus::OK;
+			HttpResponse(client, false, code, HttpStatus::ToString(code), "application/json",
+			             ja.ToString());
+			return;
 		}
 	}
-
-	HttpResponse(client, false, 404, "Not found");
+	
+	HttpResponse(client, false, HttpStatus::NOT_FOUND);
 }
 
 void RunServerLoop(TcpSocket& server)

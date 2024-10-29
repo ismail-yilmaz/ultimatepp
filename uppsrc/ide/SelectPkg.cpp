@@ -175,6 +175,7 @@ SelectPackageDlg::SelectPackageDlg(const char *title, bool selectvars_, bool mai
 	Icon(IdeImg::MainPackage(), IdeImg::PackageLarge());
 	base.AutoHideSb();
 	base.NoGrid();
+	base.AddIndex();
 	base.AddColumn("Assembly");
 	base.WhenCursor = THISBACK(OnBase);
 	base.WhenBar = THISBACK(ToolBase);
@@ -584,12 +585,13 @@ again:
 	for(int i = 0; i < dlg.list.GetCount(); i++)
 		if((bool)dlg.list.Get(i, 0))
 			n++;
-	if(n)
+	if(n) {
 		if(!PromptYesNo("Remove " + AsString(n) + " assemblies?"))
 			goto again;
 		for(int i = 0; i < dlg.list.GetCount(); i++)
 			if((bool)dlg.list.Get(i, 0))
 				DeleteFile(VarFilePath(~dlg.list.Get(i, 1)));
+	}
 	SyncBase(vars);
 }
 
@@ -823,11 +825,15 @@ void SelectPackageDlg::SyncBase(String initvars)
 {
 	Vector<String> varlist;
 	for(FindFile ff(ConfigFile("*.var")); ff; ff.Next())
-		if(ff.IsFile())
+		if(ff.IsFile()) {
 			varlist.Add(GetFileTitle(ff.GetName()));
+		}
+
 	Sort(varlist, &PackageLess);
 	base.Clear();
-	Append(base, varlist);
+	for(String s : varlist)
+		base.Add(s, s);
+	base.HeaderTab(0).SetText("Assembly (" + AsString(base.GetCount()) + ")");
 	if(!base.FindSetCursor(initvars)) {
 		if(base.GetCount() > 0)
 			base.SetCursor(0);

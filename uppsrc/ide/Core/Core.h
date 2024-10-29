@@ -45,11 +45,13 @@ void   ReduceCacheFolder(const char *path, int64 max_total);
 
 class PPInfo {
 	enum { AUTO, APPROVED, PROHIBITED };
+
 	struct PPFile : Moveable<PPFile> {
 		int                           scan_serial = 0;
 		Vector<Tuple<String, int>>    flags; // "#if... flagXXXX"
-		VectorMap<String, String>     defines; // #define ...
-		Index<String>                 includes[2]; // 1 - speculative includes
+		VectorMap<String, String>     all_defines; // #define ..., 1 - speculative
+		VectorMap<String, String>     defines[2]; // #define ..., 1 - speculative
+		Index<String>                 includes[2]; // 1 - speculative includes (in #if conditionals)
 		Index<String>                 define_includes[2]; // #define LAYOUTFILE
 		bool                          guarded; // has include guards
 		int                           blitz; // AUTO, APPROVED, PROHIBITED
@@ -109,7 +111,7 @@ public:
 
 	Time                  GetTime(const String& path);
 	
-	const VectorMap<String, String>& GetFileDefines(const String& path) { return File(NormalizePath(path)).defines; }
+	const VectorMap<String, String>& GetFileDefines(const String& path) { return File(NormalizePath(path)).all_defines; }
 	const Vector<Tuple<String, int>>& GetFileFlags(const String& path)  { return File(NormalizePath(path)).flags; }
 
 	void                  Dirty();
@@ -290,6 +292,8 @@ public:
 };
 
 Nest& MainNest();
+
+String GetUppOut();
 
 String DefaultHubFilePath();
 
@@ -573,6 +577,7 @@ struct Builder {
 		const Index<String>& common_config, bool exporting, bool last_ws) {}
 	virtual String GetTargetExt() const = 0;
 	virtual void SaveBuildInfo(const String& package) {}
+	virtual String CompilerName() const { return Null; }
 
 	Builder()          { doall = false; main_conf = false; }
 	virtual ~Builder() {}

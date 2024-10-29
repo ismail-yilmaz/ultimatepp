@@ -4,7 +4,7 @@
 #include <ide/Common/Common.h>
 #include <RichEdit/RichEdit.h>
 #include <CodeEditor/CodeEditor.h>
-#include <IconDes/IconDes.h>
+#include <ide/IconDes/IconDes.h>
 #include <ide/Browser/Browser.h>
 
 #define LAYOUTFILE <ide/LayDes/LayDes.lay>
@@ -270,16 +270,17 @@ struct LayDesEditPos {
 
 class LayDes : public StaticRect {
 public:
-	virtual void   Paint(Draw& w) override;
-	virtual Image  CursorImage(Point p, dword keyflags) override;
-	virtual void   LeftDown(Point p, dword keyflags) override;
-	virtual void   LeftRepeat(Point p, dword keyflags) override;
-	virtual void   MouseMove(Point p, dword keyflags) override;
-	virtual void   MouseWheel(Point p, int zdelta, dword keyflags) override;
-	virtual void   LeftUp(Point p, dword keyflags) override;
-	virtual void   RightDown(Point p, dword keyflags) override;
-	virtual void   Layout() override;
-	virtual bool   HotKey(dword key) override;
+	void   Paint(Draw& w) override;
+	Image  CursorImage(Point p, dword keyflags) override;
+	void   LeftDown(Point p, dword keyflags) override;
+	void   LeftRepeat(Point p, dword keyflags) override;
+	void   MouseMove(Point p, dword keyflags) override;
+	void   MouseWheel(Point p, int zdelta, dword keyflags) override;
+	void   HorzMouseWheel(Point, int zdelta, dword) override;
+	void   LeftUp(Point p, dword keyflags) override;
+	void   RightDown(Point p, dword keyflags) override;
+	void   Layout() override;
+	bool   HotKey(dword key) override;
 
 private:
 	bool   DoKey(dword key, int count);
@@ -341,7 +342,9 @@ private:
 	bool              usegrid;
 	bool              ignoreminsize;
 	bool              sizespring;
-
+	
+	int               layout_zoom = 0;
+	
 	WithMatrixLayout<TopWindow>  matrix;
 	WithSettingLayout<TopWindow> setting;
 
@@ -354,8 +357,6 @@ private:
 		friend unsigned GetHashValue(const TempGroup& g) { return 0; }
 		TempGroup(const String& temp, const String& group) : temp(temp), group(group) {}
 	};
-	
-	int             Zoom = 0;
 	
 	Rect   CtrlRect(Ctrl::LogPos pos, Size sz);
 	Rect   CtrlRectZ(Ctrl::LogPos pos, Size sz);

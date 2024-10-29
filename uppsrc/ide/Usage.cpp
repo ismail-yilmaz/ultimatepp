@@ -68,7 +68,7 @@ String ScopeWorkaround(const char *s)
 			r.Cat(b, s);
 		}
 	}
-	return r;
+	return String(r);
 }
 
 void GatherBaseVirtuals(const String& cls, const String& signature, Index<String>& ids, Index<String>& visited)
@@ -127,15 +127,13 @@ void Ide::Usage(const String& id, const String& name, Point ref_pos)
 	bool local = false;
 	AnnotationItem cm = editor.FindCurrentAnnotation(); // what function body are we in?
 	if(IsFunction(cm.kind)) { // do local variables
-		for(const AnnotationItem& lm : editor.locals) {
-			int ppy = -1;
-			if(lm.id == id && lm.pos.y >= cm.pos.y && lm.pos.y <= li && lm.pos.y > ppy) {
+		for(const AnnotationItem& lm : editor.locals)
+			if(lm.id == id && lm.pos.y >= cm.pos.y && lm.pos.y <= li) {
 				if(ref_pos == lm.pos) {
 					local = true;
 					break;
 				}
 			}
-		}
 	}
 	
 	NewFFound();
@@ -263,6 +261,39 @@ void Ide::Usage()
 
 void Ide::IdUsage()
 {
+	if(designer)
+		return;
+	if(editfile.EndsWith(".lay")) {
+		String layout, item;
+		if(GetLayoutItem(layout, item)) {
+			if(item.GetCount())
+				FindDesignerItemReferences("With" + layout + "::" + item, item);
+			else
+				FindDesignerItemReferences("With" + layout, layout);
+		}
+		return;
+	}
+	if(editfile.EndsWith(".key")) {
+		CParser p(editor.GetUtf8Line(editor.GetCursorLine()));
+		try {
+			p.PassId("KEY");
+			p.PassChar('(');
+			String id = "AK_" + p.ReadId();
+			String path = NormalizePath(editfile);
+			for(const auto& f : ~CodeIndex())
+				for(const AnnotationItem& m : f.value.items)
+					if(m.name == id) {
+						Index<String> ids, unique;
+						ids.Add(m.id);
+						NewFFound();
+						UsageId(id, id, ids, IsStruct(m.kind), false, unique);
+						UsageFinish();
+						return;
+					}
+		}
+		catch(CParser::Error) {}
+		return;
+	}
 	String name;
 	Point ref_pos;
 	String ref_id;

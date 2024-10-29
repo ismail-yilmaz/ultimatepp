@@ -757,16 +757,8 @@ void Ide::EditAsText()
 	}
 }
 
-void Ide::EditUsingDesigner()
+bool Ide::GetLayoutItem(String& layout, String& item)
 {
-	String path = editfile;
-	if(editastext.Find(editfile) < 0 && editashex.Find(editfile) < 0)
-		return;
-	editashex.RemoveKey(editfile);
-	editastext.RemoveKey(editfile);
-	byte cs = editor.GetCharset();
-	int sc = editor.GetSpellcheckComments();
-	String layout, item;
 	if(ToLower(GetFileExt(editfile)) == ".lay") {
 		int i = editor.GetLine(editor.GetCursor());
 		item = GetLayItemId(editor.GetUtf8Line(i));
@@ -777,13 +769,26 @@ void Ide::EditUsingDesigner()
 				if(p.Id("LAYOUT")) {
 					p.Char('(');
 					layout = p.ReadId();
-					break;
+					return true;
 				}
 			}
 			catch(CParser::Error) {}
 		}
-		
 	}
+	return false;
+}
+
+void Ide::EditUsingDesigner()
+{
+	String path = editfile;
+	if(editastext.Find(editfile) < 0 && editashex.Find(editfile) < 0)
+		return;
+	editashex.RemoveKey(editfile);
+	editastext.RemoveKey(editfile);
+	byte cs = editor.GetCharset();
+	int sc = editor.GetSpellcheckComments();
+	String layout, item;
+	GetLayoutItem(layout, item);
 	FlushFile();
 	EditFile0(path, cs, sc);
 	if(layout.GetCount()) {
@@ -856,9 +861,7 @@ void Ide::EditFile(const String& p)
 void Ide::CheckFileUpdate()
 {
 	if(editfile.IsEmpty() || !IsForeground() || designer) return;
-	FindFile ff(editfile);
-	if(!ff) return;
-	FileTime tm = ff.GetLastWriteTime();
+	FileTime tm = GetFileTime(editfile);
 	if(tm == edittime) return;
 	edittime = tm;
 	if(editor.IsDirty() && !Prompt(Ctrl::GetAppName(), CtrlImg::exclamation(),
@@ -867,7 +870,7 @@ void Ide::CheckFileUpdate()
 		"Reload", "Keep")) return;
 
 	if(!editor.IsView() && !editor.IsReadOnly() && editor.GetUndoCount() &&
-	   max((int64)editor.GetLength(), ff.GetLength()) < 30*1024*1024) {
+	   max((int64)editor.GetLength(), GetFileLength(editfile)) < 30*1024*1024) {
 	    int c = editor.GetCursor();
 	    ApplyChanges(editor, LoadFile(editfile));
 		editor.SetCursor(c);

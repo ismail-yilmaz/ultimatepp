@@ -895,9 +895,6 @@ void FileSel::SearchLoad()
 	if(d.IsEmpty()) {
 		if(filesystem->IsWin32()) {
 			mkdir.Disable();
-			plus.Disable();
-			minus.Disable();
-			toggle.Disable();
 			list.Renaming(false);
 		}
 		dir <<= d;
@@ -906,9 +903,6 @@ void FileSel::SearchLoad()
 	else {
 		dirup.Enable();
 		mkdir.Enable();
-		plus.Enable();
-		minus.Enable();
-		toggle.Enable();
 		list.Renaming(true);
 	}
 	if(filesystem->IsPosix())
@@ -1435,29 +1429,6 @@ void FileSel::MkDir() {
 	}
 }
 
-void FileSel::PlusMinus(const char *title, bool sel) {
-	String pattern;
-	if(EditText(pattern, title, t_("Mask")) && !pattern.IsEmpty())
-		for(int i = 0; i < list.GetCount(); i++)
-			if(!list.Get(i).isdir)
-				if(PatternMatchMulti(pattern, list.Get(i).name))
-					list.SelectOne(i, sel);
-}
-
-void FileSel::Plus() {
-	PlusMinus(t_("Add to selection"), true);
-}
-
-void FileSel::Minus() {
-	PlusMinus(t_("Remove from selection"), false);
-}
-
-void FileSel::Toggle() {
-	for(int i = 0; i < list.GetCount(); i++)
-		if(!list.Get(i).isdir)
-			list.SelectOne(i, !list.IsSelected(i));
-}
-
 void FileSel::Reload()
 {
 	String fn = list.GetCurrentName();
@@ -1495,15 +1466,6 @@ bool FileSel::Key(dword key, int count) {
 	case K_CTRL_UP:
 		list.SetFocus();
 		dirup.PseudoPush();
-		return true;
-	case '+':
-		plus.PseudoPush();
-		return true;
-	case '-':
-		minus.PseudoPush();
-		return true;
-	case '*':
-		toggle.PseudoPush();
 		return true;
 	case K_F5:
 		Reload();
@@ -1729,7 +1691,7 @@ Image GetDirIcon(const String& s)
 #endif
 	if(IsNull(img))
 		img = CtrlImg::Dir();
-	return DPI(img);
+	return img;
 }
 
 void FolderDisplay::Paint(Draw& w, const Rect& r, const Value& q,
@@ -1932,20 +1894,6 @@ bool FileSel::Execute(int _mode) {
 	Rect dr = dir.GetRect();
 	int dp = max(20, dir.Ctrl::GetPos().y.GetB());
 	int px = GetSize().cx - lr.right;
-/*	if(IsMulti()) { // Cxl: Have we ever used these?!
-		toggle.RightPos(px, dp).TopPos(dr.top, dp);
-		minus.RightPos(px + 2 * dp, dp).TopPos(dr.top, dp);
-		plus.RightPos(px + 3 * dp, dp).TopPos(dr.top, dp);
-		px += 3 * dp;
-		toggle.Show();
-		minus.Show();
-		plus.Show();
-	}
-	else {*/
-		toggle.Hide();
-		minus.Hide();
-		plus.Hide();
-//	}
 	if(mkdir.IsShown()) {
 		mkdir.RightPos(px, dp).TopPos(dr.top, dp);
 		dirup.RightPos(px + dp, dp).TopPos(dr.top, dp);
@@ -2198,7 +2146,7 @@ void FileSel::AddPlaceRaw(const String& path, const Image& m, const String& name
 		row = row < 0 ? places.GetCount() : row;
 		places.Insert(row);
 		places.Set(row, 0, path);
-		places.Set(row, 1, DPI(m));
+		places.Set(row, 1, m);
 		places.Set(row, 2, name);
 		places.Set(row, 3, group);
 		places.SetLineCy(row, max(m.GetSize().cy + 4, GetStdFontCy() + 4));
@@ -2210,7 +2158,7 @@ void FileSel::AddPlaceRaw(const String& path, const Image& m, const String& name
 FileSel& FileSel::AddPlace(const String& path, const Image& m, const String& name, const char* group, int row)
 {
 	if(path.GetCount())
-		AddPlaceRaw(NormalizePath(path), DPI(m), name, group, row);
+		AddPlaceRaw(NormalizePath(path), m, name, group, row);
 	return *this;
 }
 
@@ -2352,12 +2300,6 @@ FileSel::FileSel()
 	Add(hiddenfiles);
 	mkdir <<= THISBACK(MkDir);
 	Add(mkdir);
-	plus <<= THISBACK(Plus);
-	Add(plus);
-	minus <<= THISBACK(Minus);
-	Add(minus);
-	toggle <<= THISBACK(Toggle);
-	Add(toggle);
 
 	ok <<= THISBACK(Open);
 	list <<= THISBACK(Update);
@@ -2368,12 +2310,6 @@ FileSel::FileSel()
 	dirup.Tip(t_("Dir up") + String(" (Ctrl+Up)"));
 	mkdir.SetImage(CtrlImg::MkDir()).NoWantFocus();
 	mkdir.Tip(t_("Create directory") + String(" (F7)"));
-	plus.SetImage(CtrlImg::Plus()).NoWantFocus();
-	plus.Tip(t_("Select files"));
-	minus.SetImage(CtrlImg::Minus()).NoWantFocus();
-	minus.Tip(t_("Unselect files"));
-	toggle.SetImage(CtrlImg::Toggle()).NoWantFocus();
-	toggle.Tip(t_("Toggle files"));
 	type <<= THISBACK(Load);
 	for(int pass = 0; pass < 2; pass++) {
 		int k = pass * FILELISTSORT_DESCENDING;

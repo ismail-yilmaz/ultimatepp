@@ -46,12 +46,7 @@
 		#elif __APPLE__
 			// zvzv note
 			// s/b MACOSX
-			#ifdef flagX11
-				#define PLATFORM_OSX11 1
-				#define flagNOGTK
-			#else
-				#define PLATFORM_COCOA 1
-			#endif
+			#define PLATFORM_COCOA 1
 			#define PLATFORM_BSD 1
 			#define PLATFORM_MACOS 1
 			#define PLATFORM_OSX 1
@@ -142,9 +137,19 @@
 		#define _HAVE_NO_STDWSTRING 1
 		//BF toolchain has no support for __thread (TLS), so U++ Heap not possible
 		#define flagUSEMALLOC
-	#else
-		#error Unknown CPU architecture
+	#else // unknown CPU
+		#ifdef __LP64__
+			#define CPU_64
+		#endif
+		#ifdef __LITTLE_ENDIAN__
+			#define CPU_LITTLE_ENDIAN 1
+			#define CPU_LE 1
+		#endif
 	#endif
+#endif
+
+#ifdef flagFlatpak
+	#define FLATPAK 1
 #endif
 
 #ifdef _MSC_VER

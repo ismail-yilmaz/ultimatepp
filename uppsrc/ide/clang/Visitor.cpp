@@ -8,7 +8,7 @@ class ClangCursorInfo {
 	CXCursor     parent;
 	CXCursorKind parentKind;
 	CXPrintingPolicy pp_id;
-
+ 
 
 	bool         hasraw_id = false;
 	String       raw_id;
@@ -35,6 +35,8 @@ public:
 	String       Name();
 	String       Id();
 	String       Bases();
+	
+	CXCursor     GetCursor()                 { return cursor; }
 
 	ClangCursorInfo(CXCursor cursor, CXPrintingPolicy pp_id);
 };
@@ -105,7 +107,7 @@ String ClangCursorInfo::Scope()
 String ClangCursorInfo::Id()
 {
 	if(!hasid) {
-		String m;
+		String m, s;
 		int q = 0;
 		switch(cursorKind) {
 		case CXCursor_StructDecl:
@@ -122,7 +124,17 @@ String ClangCursorInfo::Id()
 		case CXCursor_FunctionTemplate:
 		case CXCursor_CXXMethod:
 #ifdef UBUNTU2204_WORKAROUND
-			m = CleanupId(RawId());
+			s = RawId();
+			m = CleanupId(s);
+			if(s.StartsWith("template ")) { // template class method already seems to contain some scope, sometimes
+				int p = m.Find('(');
+				for(;;) { // remove any scope
+					int q = m.Find("::");
+					if(q < 0 || q >= p)
+						break;
+					m = m.Mid(q + 2);
+				}
+			}
 			while(findarg(m[q], ':', '*', '&', '(', ')', ' ') >= 0)
 				q++;
 			id = Scope();
@@ -131,8 +143,8 @@ String ClangCursorInfo::Id()
 			return id;
 #else
 			m = RawId();
-			break;
 #endif
+			break;
 		case CXCursor_ClassTemplate:
 		case CXCursor_VarDecl:
 		case CXCursor_ParmDecl:
@@ -167,25 +179,30 @@ String ClangCursorInfo::Id()
 
 String ClangCursorInfo::Bases()
 {
-	String result;
+	Tuple<CXPrintingPolicy, String> q;
+	q.a = pp_id;
 	if(findarg(cursorKind, CXCursor_StructDecl, CXCursor_ClassDecl, CXCursor_ClassTemplate) >= 0) {
 		clang_visitChildren(cursor,
 			[](CXCursor cursor, CXCursor p, CXClientData clientData) -> CXChildVisitResult {
 				if(findarg(clang_getCursorKind(cursor), CXCursor_CXXBaseSpecifier) >= 0) {
-					String& result = *(String *)clientData;
-					MergeWith(result, ";", GetTypeSpelling(cursor));
+					Tuple<CXPrintingPolicy, String>& q = *(Tuple<CXPrintingPolicy, String>*)clientData;
+					CXCursor ref = clang_getCursorReferenced(cursor);
+					if(!clang_Cursor_isNull(ref)) {
+						ClangCursorInfo rf(ref, q.a);
+						MergeWith(q.b, ";", rf.Id());
+					}
 				}
 				return CXChildVisit_Continue;
 			},
-			&result
+			&q
 		);
 	}
 	if(cursorKind == CXCursor_TypedefDecl) {
 		CXType type = clang_getTypedefDeclUnderlyingType(cursor);
 		ClangCursorInfo cci(clang_getTypeDeclaration(type), pp_id);
-		result = CleanupId(cci.Type());
+		q.b = CleanupId(cci.Type());
 	}
-	return result;
+	return q.b;
 }
 
 ClangVisitor::CXLocation ClangVisitor::GetLocation(CXSourceLocation cxlocation)
@@ -329,22 +346,42 @@ bool ClangVisitor::ProcessNode(CXCursor cursor)
 
 	if(!clang_Cursor_isNull(ref)) {
 		LoadSourceLocation();
-		SourceLocation ref_loc = GetSourceLocation(GetLocation(clang_getCursorLocation(ref)));
-		int q = -1;
-		if(findarg(ci.Kind(), CXCursor_CXXBaseSpecifier, CXCursor_TemplateRef) < 0) // suppress template untyping for : WithDlgLayout<TopWindow>
-			q = tfn.Find(ref_loc);
-
-		ClangCursorInfo ref_ci(q >= 0 ? tfn[q].cursor : ref, pp_id);
-
-		ReferenceItem rm;
-		rm.pos = sl.pos;
-		rm.id = ref_ci.Id();
-		rm.ref_pos = ref_loc.pos;
-		Index<ReferenceItem>& rd = ref_done.GetAdd(ref_loc.path);
-		if(rm.id.GetCount() && rd.Find(rm) < 0) {
-			rd.Add(rm);
-			info.GetAdd(sl.path).refs.Add(rm);
-		}
+		auto AddRef = [&](CXCursor ref) {
+			SourceLocation ref_loc = GetSourceLocation(GetLocation(clang_getCursorLocation(ref)));
+			int q = -1;
+			if(findarg(ci.Kind(), CXCursor_CXXBaseSpecifier, CXCursor_TemplateRef) < 0) // suppress template untyping for : WithDlgLayout<TopWindow>
+				q = tfn.Find(ref_loc);
+			ClangCursorInfo ref_ci(q >= 0 ? tfn[q].cursor : ref, pp_id);
+			
+			ReferenceItem rm;
+			rm.pos = sl.pos;
+			rm.id = ref_ci.Id();
+			rm.ref_pos = ref_loc.pos;
+		#if 0
+			DLOG("=======");
+			DDUMP(sl.pos);
+			DDUMP(ref_loc.pos);
+			DDUMP(ref_loc.path);
+			DDUMP(rm.id);
+			DDUMP(ref_ci.Name());
+			DDUMP(ref_ci.Kind());
+			DDUMP(ref_ci.RawId());
+			DDUMP(ref_ci.Type());
+			DDUMP(ref_ci.Scope());
+			DDUMP(ref_ci.Nspace());
+		#endif
+			Index<ReferenceItem>& rd = ref_done.GetAdd(ref_loc.path);
+			if(rm.id.GetCount() && rd.Find(rm) < 0) {
+				rd.Add(rm);
+				info.GetAdd(sl.path).refs.Add(rm);
+			}
+		};
+		
+		if(clang_getCursorKind(ref) == CXCursor_OverloadedDeclRef)
+			for(unsigned int i = 0; i < clang_getNumOverloadedDecls(ref); i++)
+				AddRef(clang_getOverloadedDecl(ref, i));
+		else
+			AddRef(ref);
 	}
 
 	if(findarg(kind, CXCursor_FunctionTemplate, CXCursor_FunctionDecl, CXCursor_Constructor,

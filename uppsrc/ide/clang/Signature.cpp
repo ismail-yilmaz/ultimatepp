@@ -169,6 +169,7 @@ String CleanupPretty(const String& signature)
 	StringBuffer result;
 	const char *s = signature;
 	int plvl = 0;
+	int tlvl = 0;
 	while(*s && *s != '{')
 		if(s[0] == ' ' && s[1] == '=' && s[2] == ' ' && s[3] == '{')
 			break;
@@ -185,8 +186,8 @@ String CleanupPretty(const String& signature)
 			while(iscid(*s))
 				s++;
 			int len = int(s - b);
-			if(len == 5 && (memcmp(b, "class", 5) == 0 || memcmp(b, "union", 5) == 0) ||
-			   len == 6 && (memcmp(b, "struct", 6) == 0 || memcmp(b, "extern", 6) == 0 || memcmp(b, "inline", 6) == 0) ||
+			if(len == 5 && (memcmp(b, "class", 5) == 0 && tlvl == 0 || memcmp(b, "union", 5) == 0) ||
+			   len == 6 && (memcmp(b, "struct", 6) == 0 && tlvl == 0 || memcmp(b, "extern", 6) == 0 || memcmp(b, "inline", 6) == 0) ||
 			   len == 7 && (memcmp(b, "virtual", 7) == 0) ||
 			   len == 8 && (memcmp(b, "override", 8) == 0 || memcmp(b, "noexcept", 8) == 0)) {
 			   while(*s == ' ')
@@ -244,6 +245,8 @@ String CleanupPretty(const String& signature)
 		else {
 			if(*s == '(') plvl++;
 			if(*s == ')') plvl--;
+			if(*s == '<') tlvl++;
+			if(*s == '>') tlvl--;
 			result.Cat(*s++);
 		}
 	String r = result;
@@ -469,8 +472,37 @@ String MakeDefinition(const AnnotationItem& m, const String& klass)
 		result << pretty;
 	else
 		result << pretty.Mid(0, q) << klass << pretty.Mid(q);
-	result << "\n{\n}\n\n";
-	return result;
+
+	const char *s = result;
+	int lvl = 0;
+	String r;
+	while(*s) {
+		if(*s == '(')
+			lvl++;
+		if(*s == ')')
+			lvl--;
+		if(lvl == 1 && *s == '=') { // skip default parameter
+			while(r.GetCount() && s[-1] == ' ') {
+				s--;
+				r.TrimLast();
+			}
+			while(*s) {
+				if((*s == ',' || *s == ')') && lvl == 1) {
+					r.Cat(*s++);
+					break;
+				}
+				if(*s == '(')
+					lvl++;
+				if(*s == ')')
+					lvl--;
+				s++;
+			}
+		}
+		else
+			r.Cat(*s++);
+	}
+	r << "\n{\n}\n\n";
+	return r;
 }
 
 String MakeDefinition(const AnnotationItem& m)

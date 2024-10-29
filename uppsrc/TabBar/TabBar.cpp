@@ -1439,7 +1439,7 @@ Image TabBar::GetDragSample(int n)
 		s++;
 	}
 	Premultiply(ib);
-	return ib;
+	return Image(ib);
 }
 
 void TabBar::Scroll()
@@ -2294,9 +2294,14 @@ int TabBar::GetTargetTab(Point p)
 
 void TabBar::MouseWheel(Point p, int zdelta, dword keyflags)
 {
-	sc.AddPos(-zdelta / 4, true);
+	sc.AddPos(zdelta / 4, true);
 	Scroll();
 	MouseMove(p, 0);
+}
+
+void TabBar::HorzMouseWheel(Point p, int zdelta, dword keyflags)
+{
+	MouseWheel(p, zdelta, keyflags);
 }
 
 Point TabBar::AdjustMouse(Point const &p) const

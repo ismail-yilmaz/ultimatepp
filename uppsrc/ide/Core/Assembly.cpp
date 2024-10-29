@@ -124,7 +124,7 @@ String Nest::PackagePath0(const String& name)
 		if(FileExists(p)) return p;
 	}
 	return d.GetCount() ? NormalizePath(AppendFileName(AppendFileName(d[0], uppfile),
-		                                GetFileName(uppfile)) + ".upp") : "";
+		                                GetFileName(uppfile)) + ".upp") : String();
 }
 
 String Nest::PackagePath(const String& name)
@@ -149,6 +149,41 @@ bool SaveVars(const char *name)
 		return false;
 	varsname = name;
 	return true;
+}
+
+#ifdef PLATFORM_POSIX
+
+String GetDefaultUppOut()
+{
+	String out;
+	String p = GetExeFolder();
+	while(p.GetCount() > 1 && DirectoryExists(p)) {
+		String h = AppendFileName(p, ".cache");
+		if(DirectoryExists(h)) {
+			out = h;
+			break;
+		}
+		p = GetFileFolder(p);
+	}
+	
+	out = Nvl(out, GetHomeDirFile(".cache")) + "/upp.out";
+	
+	RealizeDirectory(out);
+	return out;
+}
+
+#else
+
+String GetDefaultUppOut()
+{
+	return ConfigFile("out");
+}
+
+#endif
+
+String GetUppOut()
+{
+	return Nvl(GetVar("OUTPUT"), GetDefaultUppOut());
 }
 
 String DefaultHubFilePath()

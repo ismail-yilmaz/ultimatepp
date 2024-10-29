@@ -65,7 +65,7 @@ Image Upscale2x_(const Image& src)
 				p += 5;
 			}
 		}
-	return dst;
+	return Image(dst);
 }
 
 Image Upscale2x(const Image& src)
@@ -97,10 +97,9 @@ Image Upscale2x(const Image& src)
 		s = Filter(s, ef);
 	}
 	ImageBuffer h(s);
-	h.SetResolution(IMAGE_RESOLUTION_UHD);
 	h.SetHotSpot(src.GetHotSpot() * 2);
 	h.Set2ndSpot(s2 * 2);
-	return h;
+	return Image(h);
 }
 
 Image Downscale2x(const Image& src)
@@ -110,10 +109,9 @@ Image Downscale2x(const Image& src)
 	Size s2 = src.Get2ndSpot(); // see above...
 	Image m = RescaleFilter(src, src.GetSize() / 2, s2.cx > 0 || s2.cy > 0 ? FILTER_BILINEAR : FILTER_LANCZOS3);
 	ImageBuffer h(m);
-	h.SetResolution(IMAGE_RESOLUTION_STANDARD);
 	h.SetHotSpot(s2 / 2);
 	h.Set2ndSpot(src.Get2ndSpot() / 2);
-	return h;
+	return Image(h);
 }
 
 static bool sUHDMode;
@@ -134,19 +132,6 @@ void SyncUHDMode()
 	bool uhd = GetStdFontCy() > 24;
 	if(uhd != IsUHDMode())
 		SetUHDMode(uhd);
-}
-
-Image DPI(const Image& img)
-{
-	if(IsUHDMode()) {
-		if(img.GetResolution() == IMAGE_RESOLUTION_STANDARD)
-			return MakeImage(img, Upscale2x);
-	}
-	else {
-		if(img.GetResolution() == IMAGE_RESOLUTION_UHD)
-			return MakeImage(img, Downscale2x);
-	}
-	return img;
 }
 
 Image DPI(const Image& img, int expected)

@@ -5,6 +5,8 @@
 #define KEYFILE      <ide/ide.key>
 #include             <CtrlLib/key_source.h>
 
+#define LTIMESTOP(x)  //   DTIMESTOP(x);
+
 using namespace IdeKeys;
 
 void Ide::DoEditKeys()
@@ -27,6 +29,7 @@ void Ide::PackageMenu(Bar& menu)
 
 void Ide::FileBookmark(Bar& menu)
 {
+	LTIMESTOP("FileBookMark");
 	int i;
 	for(i = 0; i < 10; i++) {
 		const Bookmark& b = bookmark[i];
@@ -44,6 +47,7 @@ void Ide::FileBookmark(Bar& menu)
 
 void Ide::File(Bar& menu)
 {
+	LTIMESTOP("File");
 	if (!IsEditorMode())
 	{
 		menu.Add(AK_SETMAIN, IdeImg::MainPackage(), THISBACK(NewMainPackage))
@@ -55,6 +59,13 @@ void Ide::File(Bar& menu)
 		.Help("Select any file in file selector and open it in editor");
 	menu.AddMenu(!IsNull(GetOpposite()), AK_OPPOSITE, IdeImg::opposite(), THISBACK(GoOpposite))
 		.Help("Switch between source and header file");
+	String fn = GetFileExt(editfile);
+	if(findarg(ToLower(fn), ".cpp", ".c", ".cxx", ".h", ".cc", ".hpp") >= 0)
+		fn = ".cpp";
+	fn = "scratchpad" + fn;
+	menu.AddMenu(AK_SCRATCHPAD, CtrlImg::open(), [=] { EditFile(ConfigFile(fn)); })
+	    .Text(fn)
+		.Help("Open scratchpad file");
 	menu.AddMenu(AK_SAVEFILE, CtrlImg::save(), THISBACK(DoSaveFile))
 		.Help("Save current file");
 	if(!designer)
@@ -117,6 +128,7 @@ void Ide::File(Bar& menu)
 
 void Ide::AssistEdit(Bar& menu)
 {
+	LTIMESTOP("AssistEdit");
 	bool b = !editor.IsReadOnly() && !designer;
 	menu.Add(b, "Insert", THISBACK(InsertMenu));
 	menu.Add(b, "Insert #include", THISBACK(InsertInclude));
@@ -124,6 +136,7 @@ void Ide::AssistEdit(Bar& menu)
 
 void Ide::InsertAdvanced(Bar& bar)
 {
+	LTIMESTOP("InsertAdvanced");
 	bool b = !editor.IsReadOnly();
 	AssistEdit(bar);
 	bar.Add(b, "Advanced", THISBACK(EditSpecial));
@@ -131,12 +144,13 @@ void Ide::InsertAdvanced(Bar& bar)
 
 void Ide::Reformat(Bar& bar)
 {
-	bool b = !editor.IsReadOnly() && !designer;
-	bar.Sub(b, "Reformat", [=] (Bar& menu) { ReformatMenu(menu); });
+	LTIMESTOP("Reformat");
+	bar.Sub(!designer, "Reformat", [=] (Bar& menu) { ReformatMenu(menu); });
 }
 
 void Ide::EditSpecial(Bar& menu)
 {
+	LTIMESTOP("EditSpecial");
 	bool b = !editor.IsReadOnly();
 	menu.Add(AK_WORDWRAP, THISBACK(ToggleWordwrap))
 	    .Check(wordwrap);
@@ -185,6 +199,7 @@ void Ide::EditSpecial(Bar& menu)
 
 void Ide::SearchMenu(Bar& menu)
 {
+	LTIMESTOP("SearchMeanu");
 	if(!designer) {
 		menu.Add(AK_FIND, THISBACK(EditFind))
 			.Help("Search for text or text pattern");
@@ -216,6 +231,7 @@ void Ide::SearchMenu(Bar& menu)
 
 void Ide::Edit(Bar& menu)
 {
+	LTIMESTOP("Edit");
 	bool b = !editor.IsReadOnly();
 	if(editfile.GetCount() && editashex.Find(editfile) < 0) {
 		menu.Add(AK_EDITASHEX, THISBACK(EditAsHex));
@@ -295,6 +311,7 @@ void Ide::Edit(Bar& menu)
 
 void Ide::ReformatMenu(Bar& menu)
 {
+	LTIMESTOP("Reformat");
 	bool b = !editor.IsReadOnly();
 	
 	menu.Add(b, AK_REFORMAT_CODE, [=] { ReformatCode(); })
@@ -324,6 +341,7 @@ bool Ide::HasMacros()
 
 void Ide::MacroMenu(Bar& menu)
 {
+	LTIMESTOP("MacroMenu");
 	const Array<IdeMacro>& mlist = UscMacros();
 	if(!mlist.IsEmpty() && menu.IsMenuBar()) {
 		VectorMap< String, Vector<int> > submenu_map;
@@ -391,6 +409,9 @@ void Ide::EditMacro(int i)
 
 void Ide::Setup(Bar& menu)
 {
+	LTIMESTOP("Setup");
+	if(menu.IsScanKeys()) // no keys here while being slower
+		return;
 	menu.Add("Be verbose", THISBACK(ToggleVerboseBuild))
 		.Check(console.verbosebuild)
 		.Help("Log detailed description of build and debug");
@@ -418,17 +439,20 @@ void Ide::Setup(Bar& menu)
 		}
 	});
 
+#ifndef PLATFORM_FLATPAK
 	const Workspace& wspc = IdeWorkspace();
-	if(wspc[0] == "ide")
-		for(int i = 0; i < wspc.GetCount(); i++)
+	if(wspc[0] == "ide") {
+		for(int i = 0; i < wspc.GetCount(); i++) {
 			if(wspc[i] == "ide/Core") {
 				menu.Add("Upgrade TheIDE..", [=] { UpgradeTheIDE(); });
 				break;
 			}
-#ifndef PLATFORM_COCOA
-#ifndef PLATFORM_WIN32
-	menu.Add("Install theide.desktop", [=] { InstallDesktop(); });
+		}
+	}
 #endif
+
+#if !defined(PLATFORM_COCOA) && !defined(PLATFORM_WIN32) && !defined(FLATPAK)
+	menu.Add("Install theide.desktop", [=] { InstallDesktop(); });
 #endif
 
 	if(menu.IsMenuBar())
@@ -454,6 +478,7 @@ void Ide::SetupAndroidMobilePlatform(Bar& menu, const AndroidSDK& androidSDK)
 
 void Ide::ProjectRepo(Bar& menu)
 {
+	LTIMESTOP("ProjectRepo");
 	if(menu.IsScanKeys())
 		return; // avoid loading RepoDirs
 	Vector<String> w = RepoDirs(true);
@@ -464,6 +489,7 @@ void Ide::ProjectRepo(Bar& menu)
 
 void Ide::Project(Bar& menu)
 {
+	LTIMESTOP("Project");
 	if(menu.IsToolBar() && !debugger && !IsEditorMode())
 	{
 		mainconfiglist.Enable(idestate == EDITING);
@@ -526,12 +552,16 @@ void Ide::Project(Bar& menu)
 
 void Ide::FilePropertiesMenu0(Bar& menu)
 {
+	LTIMESTOP("FileProperties0");
 	menu.Add(IsActiveFile() && !IsActiveSeparator(), AK_FILEPROPERTIES, THISBACK(FileProperties))
 		.Help("File properties stored in package");
 }
 
 void Ide::FilePropertiesMenu(Bar& menu)
 {
+	LTIMESTOP("FileProperties");
+	if(menu.IsScanKeys()) // no keys here while the menu is slower
+		return;
 	FilePropertiesMenu0(menu);
 	bool candiff = IsActiveFile() && !editfile_isfolder && !designer && !IsActiveSeparator();
 	menu.Add(candiff, AK_SAVEENCODING, THISBACK(ChangeCharset))
@@ -575,6 +605,21 @@ void Ide::FilePropertiesMenu(Bar& menu)
 			if(!IsNull(editfile))
 				RunRepoDiff(editfile);
 		}).Text(txt + "file..");
+		if(editfile_repo == GIT_DIR) {
+			String origin = Sys("git -C " + GetFileFolder(editfile) + " remote get-url origin");
+			if(origin.StartsWith("https://github.com/")) {
+				origin.TrimEnd("\n");
+				origin.TrimEnd("\r");
+				origin.TrimEnd(".git");
+				String rp = editfile;
+				GetRepo(rp);
+				String p = editfile.Mid(rp.GetCount());
+				p.Replace("\\", "/");
+				menu.AddMenu("Show file on github", IdeImg::GitHub(), [=] {
+					LaunchWebBrowser(origin + "/blob/" + GetGitBranchRaw(rp) + p);
+				});
+			}
+		}
 		if(editfile.GetCount()) {
 			String mine;
 			String theirs;
@@ -692,6 +737,7 @@ void Ide::BuildPackageMenu(Bar& menu)
 
 void Ide::BuildMenu(Bar& menu)
 {
+	LTIMESTOP("BuildMenu");
 	bool b = !IdeIsDebugLock();
 	menu.Add(AK_OUTPUTMODE, THISBACK(SetupOutputMode))
 	    .Help("Setup how to build the target");
@@ -750,6 +796,7 @@ void Ide::BuildMenu(Bar& menu)
 
 void Ide::DebugMenu(Bar& menu)
 {
+	LTIMESTOP("DebugMenu");
 	bool b = idestate == EDITING && !IdeIsDebugLock();
 	if(debugger) {
 		debugger->DebugBar(menu);
@@ -798,6 +845,7 @@ void Ide::DebugMenu(Bar& menu)
 
 void Ide::AssistMenu(Bar& menu)
 {
+	LTIMESTOP("AssistMenu");
 	menu.Add(!designer, AK_ASSIST, [=] { editor.Assist(true); });
 	menu.Add(!designer, AK_JUMPS, [=] { ContextGoto(); });
 	menu.Add(!designer, AK_SWAPS, THISBACK(SwapS));
@@ -813,6 +861,7 @@ void Ide::AssistMenu(Bar& menu)
 
 void Ide::BrowseMenu(Bar& menu)
 {
+	LTIMESTOP("BrowseMenu");
 	if(!IsEditorMode()) {
 		if(menu.IsMenuBar()) {
 			menu.AddMenu(AK_NAVIGATOR, IdeImg::Navigator(), THISBACK(ToggleNavigator))
@@ -846,6 +895,7 @@ void Ide::BrowseMenu(Bar& menu)
 		if(menu.IsMenuBar()) {
 			menu.MenuSeparator();
 			menu.Add("Reindex all source files", [=] {
+				editor.ms_cache.Clear();
 				PPInfo::RescanAll();
 				for(FileAnnotation& m : CodeIndex())
 					m.time = Null;
@@ -894,6 +944,7 @@ void Ide::BrowseMenu(Bar& menu)
 
 void Ide::HelpMenu(Bar& menu)
 {
+	LTIMESTOP("HelpMenu");
 	if(!IsEditorMode()) {
 		menu.Add(AK_BROWSETOPICS, IdeImg::help(), THISBACK(ShowTopics));
 		menu.Add(editor.GetWord().GetCount(), AK_SEARCHTOPICS, THISBACK(SearchTopics));

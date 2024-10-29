@@ -7,9 +7,9 @@ String MIMECharsetName(byte charset);
 String UrlEncode(const char *s, const char *end);
 String UrlEncode(const char *s, int len);
 String UrlEncode(const String& s);
-String UrlDecode(const char *s, const char *end);
-String UrlDecode(const char *s, int len);
-String UrlDecode(const String& s);
+String UrlDecode(const char *s, const char *end, bool plus_is_space = true);
+String UrlDecode(const char *s, int len, bool plus_is_space = true);
+String UrlDecode(const String& s, bool plus_is_space = true);
 
 String QPEncode(const char* s);
 String QPDecode(const char *s, bool undescore_to_space = false);
@@ -130,6 +130,8 @@ class TcpSocket : NoCopy {
 	One<SSLInfo>            sslinfo;
 	String                  cert, pkey, sni;
 	bool                    asn1;
+	
+	String                  ca_cert;
 
 	struct SSLImp;
 	friend struct SSLImp;
@@ -241,6 +243,8 @@ public:
 	void            SSLServerNameIndication(const String& name);
 	const SSLInfo  *GetSSLInfo() const                       { return ~sslinfo; }
 	
+	void            SSLCAcert(const String& cert, bool asn1 = false);
+	
 	void            Clear();
 
 	TcpSocket&      Timeout(int ms)                          { timeout = ms; return *this; }
@@ -296,6 +300,15 @@ struct UrlInfo {
 	UrlInfo() {}
 	UrlInfo(const String& url)        { Parse(url); }
 };
+
+namespace HttpStatus
+{
+	#define CODE_(id, code, str) constexpr int id = code;
+	#include "HttpStatusCode.i"
+	#undef CODE_
+	
+	String ToString(int code);
+}
 
 struct HttpCookie : Moveable<HttpCookie> {
 	String id;
@@ -596,7 +609,7 @@ public:
 	static void  TraceShort(bool b = true);
 };
 
-bool HttpResponse(TcpSocket& socket, bool scgi, int code, const char *phrase,
+bool HttpResponse(TcpSocket& socket, bool scgi, int code, const char *phrase = NULL,
                   const char *content_type = NULL, const String& data = Null,
                   const char *server = NULL, bool gzip = false);
 
@@ -725,7 +738,7 @@ public:
 
 	dword  GetWaitEvents() const                        { return WAIT_READ|(!!out_queue.GetCount() * WAIT_WRITE); }
 	SOCKET GetSOCKET() const                            { return socket ? socket->GetSOCKET() : INVALID_SOCKET; }
-	String GetPeerAddr() const                          { return socket ? socket->GetPeerAddr() : ""; }
+	String GetPeerAddr() const                          { return socket ? socket->GetPeerAddr() : String(); }
 	void   AddTo(SocketWaitEvent& e)                    { e.Add(*socket, GetWaitEvents()); }
 
 	static void Trace(bool b = true);

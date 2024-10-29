@@ -94,37 +94,39 @@ Navigator::Navigator()
 	dlgmode = false;
 }
 
-AnnotationItem AssistEditor::FindCurrentAnnotation()
+AnnotationItem AssistEditor::FindCurrentAnnotation(bool allow_define)
 {
 	Point pos = GetCurrentPos();
 	AnnotationItem q;
 	bool line1st = true;
 	for(const AnnotationItem& m : annotations)
-		if(m.pos.y < pos.y)
-			q = m;
-		else
-		if(m.pos.y == pos.y) {
-			if(line1st) {
+		if(allow_define || m.kind != CXCursor_MacroDefinition) {
+			if(m.pos.y < pos.y)
 				q = m;
-				line1st = false;
+			else
+			if(m.pos.y == pos.y) {
+				if(line1st) {
+					q = m;
+					line1st = false;
+				}
+				else
+				if(m.pos.x <= pos.x)
+					q = m;
 			}
 			else
-			if(m.pos.x <= pos.x)
-				q = m;
+				break;
 		}
-		else
-			break;
 	return q;
 }
 
 void Navigator::SyncCursor()
 {
 	String k = "(" + GetKeyDesc(IdeKeys::AK_GOTO().key[0]) + ") ";
-	search.NullText("Symbol/lineno " + k);
+	search.NullText("Symbol/lineno/file " + k);
 	search.Tip(IsNull(search) ? String() : "Clear " + k);
 	
 	if(!navigating && theide && !theide->replace_in_files) {
-		AnnotationItem q = theide->editor.FindCurrentAnnotation();
+		AnnotationItem q = theide->editor.FindCurrentAnnotation(true);
 		navigating = true;
 		for(int pass = 0; pass < 2; pass++)
 			for(int i = 0; i < list.GetCount(); i++) {

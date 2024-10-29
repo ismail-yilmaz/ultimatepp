@@ -2,7 +2,7 @@
 #define _ide_GuiCommon_GuiCommon_h_
 
 #include <ide/Core/Core.h>
-#include <CtrlLib/CtrlLib.h>
+#include <RichEdit/RichEdit.h>
 #include <CodeEditor/CodeEditor.h>
 
 #define IMAGECLASS IdeCommonImg
@@ -50,7 +50,6 @@ struct IdeDesigner  {
 	virtual void   EditMenu(Bar& menu) = 0;
 	virtual int    GetCharset() const                               { return -1; }
 	virtual Ctrl&  DesignerCtrl() = 0;
-	virtual void   SetFocus()                                       { DesignerCtrl().SetFocus(); }
 
 	virtual ~IdeDesigner() {}
 };
@@ -111,5 +110,7 @@ String LibClangCommandLine();
 String LibClangCommandLineC();
 
 void   IdeShowConsole();
+
+void QTFEdit(String& text);
 
 #endif
