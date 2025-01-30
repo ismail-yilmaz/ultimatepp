@@ -314,6 +314,8 @@ private:
 	bool                     pixel_mode = false;
 	bool                     dark_content = false;
 	bool                     allow_dark_content = false;
+	
+	bool                     show_zoom = false;
 
 	static int fh[];
 
@@ -471,6 +473,9 @@ private:
 	Zoom       clipzoom;
 	
 	double     floating_zoom;
+	
+	RichPara::CharFormat last_format;
+	Image      last_format_img;
 
 	Rect       GetTextRect() const;
 	Size       GetZoomedPage() const;
@@ -488,6 +493,9 @@ private:
 	void       Finish();
 	void       ReadFormat();
 	void       ShowFormat();
+	void       SetLastCharFormat(const RichPara::CharFormat& fmt);
+	void       SetLastCharFormat();
+	void       LastCharFormat();
 	int        GetMousePos(Point p);
 	RichHotPos GetHotPos(Point p);
 	int        GetHotSpot(Point p) const;
@@ -689,6 +697,8 @@ public:
 	Event<String&>           WhenIndexEntry;
 	Event<Bar&>              WhenBar;
 	Event<>                  WhenSel;
+	Gate<const String&>      WhenIsLink;
+	Event<const String&>     WhenLink;
 
 	void   StdBar(Bar& menu);
 
@@ -747,6 +757,7 @@ public:
 	void   SubscriptTool(Bar& bar, dword key = 0);
 	void   InkTool(Bar& bar);
 	void   PaperTool(Bar& bar);
+	void   LastFormatTool(Bar& bar, dword key = K_CTRL_D);
 	void   LanguageTool(Bar& bar, int width = Zx(60));
 	void   HyperlinkTool(Bar& bar, int width = Zx(180), dword key = 0, const char *tip = NULL);
 	void   SpellCheckTool(Bar& bar);
@@ -868,6 +879,8 @@ public:
 	void     SetFooter(const String& s)                   { footer = s; }
 	void     PrintNoLinks(bool b = true)                  { nolinks = b; }
 
+	Event<>  WhenLeftUp;
+	
 	typedef RichEdit CLASSNAME;
 
 	RichEdit();
