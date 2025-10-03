@@ -876,7 +876,7 @@ public:
 		void  InsertAs(const String& data);
 		void  InsertAs();
 		void  InsertFilePath(bool c);
-		void  InsertFileBase64();
+		void  InsertFileContent();
 		void  InsertMenu(Bar& bar);
 		void  InsertInclude(Bar& bar);
 		void  InsertAdvanced(Bar& bar);
@@ -1034,6 +1034,7 @@ public:
 		void  RemoveDs();
 		void  FindDesignerItemReferences(const String& id, const String& name);
 		void  NavigatorDlg();
+		void  InsertParameters();
 
 	void      HelpMenu(Bar& menu);
 	    void  ViewIdeLogFile();
